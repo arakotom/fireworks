@@ -27,3 +27,7 @@ The examples.py file shows how the solver can be called and  plots an example of
 }
 
 ````
+## Note
+
+The structure of the penalty comes from the one of skglm (https://github.com/scikit-learn-contrib/skglm/).
+
