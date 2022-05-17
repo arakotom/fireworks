@@ -7,6 +7,9 @@ Details of algorithm experimental results can be found in our following paper ht
 The examples.py file shows how the solver can be called and  plots an example of estimation for a small dataset.
 
 
+## Installing the package
+To install `fireworks`, simply run `pip install -e .` at the root of the repository.
+
 
 
 ````

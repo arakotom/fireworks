@@ -5,12 +5,14 @@ Created on Tue May 10 08:40:16 2022
 
 @author: alain
 """
-
-from base_penalty import BasePenalty
 import numpy as np
 from numba.types import bool_
 
-#@jitclass(spec_MCP)
+from .base_penalty import BasePenalty
+
+# @jitclass(spec_MCP)
+
+
 class MCPenalty(BasePenalty):
     """Minimax Concave Penalty (MCP), a non-convex sparse penalty.
     Notes
@@ -73,30 +75,30 @@ class MCPenalty(BasePenalty):
         return np.max(np.abs(gradient0))
 
 
-
 class LSP(BasePenalty):
     """ LogSum Penalty, a non-convex sparse penalty.
-         
+
             \sum_k lbd * log(1 + |w_k|/theta)
-    
+
     """
 
-    def __init__(self, lbd,theta):
+    def __init__(self, lbd, theta):
         self.theta = theta
         self.lbd = lbd
+
     def value(self, w):
         """Compute the value of LSP."""
         return self.lbd*np.sum(sum(np.log(1 + np.abs(w) / self.theta)))
 
-    def prox_1d(self, w,stepsize,j):
+    def prox_1d(self, w, stepsize, j):
         """Compute the proximal operator of MCP."""
-        lbd= self.lbd*stepsize
-        
+        lbd = self.lbd*stepsize
+
         absw = np.abs(w)
         z = absw - self.theta
         v = z * z - 4 * (lbd - absw * self.theta)
         v = np.maximum(v, 0)
-    
+
         sqrtv = np.sqrt(v)
         w1 = np.maximum((z + sqrtv) / 2, 0)
         w2 = np.maximum((z - sqrtv) / 2, 0)
@@ -104,7 +106,7 @@ class LSP(BasePenalty):
         y0 = 0.5 * w**2
         y1 = 0.5 * (w1 - absw)**2 + lbd * np.log(1 + w1 / self.theta)
         y2 = 0.5 * (w2 - absw)**2 + lbd * np.log(1 + w2 / self.theta)
-    
+
         sel1 = (y1 < y2) & (y1 < y0)
         sel2 = (y2 < y1) & (y2 < y0)
         wopt = w1 * sel1 + w2 * sel2
@@ -124,38 +126,40 @@ class LSP(BasePenalty):
                     grad[idx] + self.lbd * np.sign(w[j])/(self.theta + np.abs(w[j])))
 
         return subdiff_dist
+
     def subdiff_at_0(self):
         return self.lbd/self.theta
-    def check_opt(self,w,grad,tol):
-        #verbose=True
+
+    def check_opt(self, w, grad, tol):
+        # verbose=True
         absw = np.abs(w)
         ind_nz = absw.nonzero()[0]
         ind_zero = [i for i in range(w.shape[0]) if i not in ind_nz]
-    
+
         # ind_zero = np.where(absw < tol_val)[0]
-        #print(len(ind_zero))
+        # print(len(ind_zero))
         if len(ind_zero) > 0:
-            opt_ind_zero = np.all(abs(grad[ind_zero]) <= (self.lbd / self.theta + tol))   
+            opt_ind_zero = np.all(abs(grad[ind_zero]) <= (self.lbd / self.theta + tol))
             test_val = np.max(np.abs(grad[ind_zero]) - self.lbd)
-    
-            #if verbose:
+
+            # if verbose:
             #    print('Opt_Z', test_val, opt_ind_zero)
-    
+
         else:
             opt_ind_zero = True
             test_val = 0
         if ind_nz.shape[0] > 0:
-    
+
             test = abs(grad[ind_nz] +
                        self.lbd * np.sign(w[ind_nz]) / (self.theta + np.abs(w[ind_nz])))
-    
+
             opt_ind_nz = np.all(test < tol)
-            #if verbose:
+            # if verbose:
             #    print('Opt_NZ', np.max(test), opt_ind_nz)
-    
+
         else:
             opt_ind_nz = True
-    
+
         return (opt_ind_zero and opt_ind_nz), test_val
 
     def is_penalized(self, n_features):
@@ -172,9 +176,7 @@ class LSP(BasePenalty):
 
 
 if __name__ == "__main__":
-    w = np.array([0,-2,3])
-    lsp = LSP(1,1)
+    w = np.array([0, -2, 3])
+    lsp = LSP(1, 1)
     print(lsp.value(w))
     print(lsp.prox_1d(w))
-    
-
